@@ -7,7 +7,9 @@
 #include <sys/socket.h>
 
 #define SERVER_PORT 8443
-#define SERVER_IP "10.0.0.1"
+#define SERVER_IP "127.0.0.1"
+#define QUEUE_CAP 5 
+#define MAX_CLIENTS 10
 
 int init_server(){
 
@@ -36,26 +38,42 @@ int init_server(){
 
     // provide the socket with a name
     err = bind(fd, (struct sockaddr *)&addr, addr_len);
+
     if (err == -1){
-        printf("Error. Value: %d\n", errno);
+        printf("Error on bind() invocation. Value: %d\n", errno);
         exit(1); 
     }
 
-    err = listen(fd, 10); // permit 10 requests before refusing further requests
+    err = listen(fd, QUEUE_CAP); // permit 10 requests before refusing further requests
     if (err == -1){
         printf("Error. Value: %d\n", errno);
         exit(1);
     }
 
-    printf("Server is up and running.");
+    printf("Server is up and running.\n");
 
     // begin loop to track incoming requests
+    int client_id; 
+    struct sockaddr * client_addr;
+    socklen_t client_addr_len;
     while (1){
-        accept(fd, )
-
+        client_id = accept(fd, client_addr, &client_addr_len);
+        if (client_id == -1){
+            printf("Error. Value: %d\n", errno);
+            exit(1);
+        }
+        printf("Client successfully connected!\n");
+        char* socket_address = (*client_addr).sa_data;
+        int i = 0;
+        while (socket_address[i] != '\0'){
+            printf("%c", socket_address[i]);
+        }
+        printf("\n");
     }
-    
-    
 
     return 0;
+}
+
+int main() {
+    init_server();
 }
