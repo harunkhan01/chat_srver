@@ -8,6 +8,8 @@
 
 #include <pthread.h>
 
+#include "thread_handler.h"
+
 #define SERVER_PORT 8443
 #define SERVER_IP "127.0.0.2"
 #define QUEUE_CAP 5 
@@ -15,37 +17,8 @@
 
 #define MESSAGE_SIZE 256
 
-struct thread_info {
-    pthread_t thread_id;
-    int       thread_num;
-    int       client_fd;
-    char      msg_buf[MESSAGE_SIZE];
-};
-
 struct thread_info t_info_buf[MAX_CLIENTS];
 pthread_t thread_buf[MAX_CLIENTS];
-
-static void* init_thread(void* arg){ 
-    int err;
-    struct thread_info* tinfo = arg;
-
-    while(1){
-        err = recv(tinfo->client_fd, tinfo->msg_buf, MESSAGE_SIZE, 0);
-
-        if (err == 0){
-            printf("User has closed connection. Exiting...\n");
-            exit(1);
-        }
-
-        if (err == -1){
-            printf("Error receiving. Exiting...");
-            exit(1);
-        }
-
-        printf("Client message: %s\n", tinfo->msg_buf);
-    }
-
-}
 
 int init_server(){
 
