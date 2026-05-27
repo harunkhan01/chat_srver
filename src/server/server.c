@@ -6,10 +6,17 @@
 #include <netinet/in.h>
 #include <sys/socket.h>
 
+#include <pthread.h>
+
 #define SERVER_PORT 8443
-#define SERVER_IP "127.0.0.1"
+#define SERVER_IP "127.0.0.2"
 #define QUEUE_CAP 5 
 #define MAX_CLIENTS 10
+
+#define MESSAGE_SIZE 256
+
+char msg_buf[MESSAGE_SIZE];
+
 
 int init_server(){
 
@@ -53,22 +60,21 @@ int init_server(){
     printf("Server is up and running.\n");
 
     // begin loop to track incoming requests
-    int client_id; 
-    struct sockaddr * client_addr;
-    socklen_t client_addr_len;
+    int client_id;
+    struct in_addr client_ip;
+    struct sockaddr_in client_addr;
+    socklen_t client_addr_len = sizeof(client_addr);
     while (1){
-        client_id = accept(fd, client_addr, &client_addr_len);
+        client_id = accept(fd, (struct sockaddr*)&client_addr, &client_addr_len);
         if (client_id == -1){
             printf("Error. Value: %d\n", errno);
             exit(1);
         }
         printf("Client successfully connected!\n");
-        char* socket_address = (*client_addr).sa_data;
-        int i = 0;
-        while (socket_address[i] != '\0'){
-            printf("%c", socket_address[i]);
-        }
-        printf("\n");
+
+        /* Spawn a thread to negotiate with client */
+
+
     }
 
     return 0;

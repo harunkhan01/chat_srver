@@ -9,8 +9,23 @@
 #define CLIENT_PORT 8440 
 #define CLIENT_IP "127.0.0.1"
 
-#define SERVER_IP "127.0.0.1"
+#define SERVER_IP "127.0.0.2"
 #define SERVER_PORT 8443
+
+#define MESSAGE_SIZE 256
+
+int send_msg(char* msg_buf, int fd, size_t msg_size){
+
+    /* We will always send a message of fixed size to start */
+    send(fd, msg_buf, msg_size, 0);
+
+    return 0;
+}
+
+int recv_msg(){
+
+    return 0;
+}
 
 int init_client(){
 
@@ -61,10 +76,24 @@ int init_client(){
     if (err == -1){
         printf("Error connecting to server. Exiting...\n");
         exit(1);
-    }else {
-        printf("Successfully connected to the server! Exiting...\n");
-        exit(1);
     }
+
+    printf("Successfully connected to the server!\n\n");
+
+    /* User may send up to 256 characters at a time. */
+    char msg_buffer[MESSAGE_SIZE]; 
+    while (1){
+        printf("Send a message: ");
+        fgets(msg_buffer, MESSAGE_SIZE, stdin);
+        printf("\n");
+
+        /* Send the message */
+        err = send_msg(msg_buffer, fd, MESSAGE_SIZE);
+
+        /* Now wait for respones from server */
+        err = recv_msg();
+    }
+        
 
     return 0;
 }
