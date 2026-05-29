@@ -6,18 +6,23 @@
 #include <netinet/in.h>
 #include <sys/socket.h>
 
+#include <pthread.h>
+
 #include "thread_handler.h"
 
 void* init_thread(void* arg){ 
     int err;
     struct thread_info* tinfo = arg;
 
+    /* We wait until we receive a signal from the main process */
+    
+
     while(1){
         err = recv(tinfo->client_fd, tinfo->msg_buf, MESSAGE_SIZE, 0);
 
         if (err == 0){
             printf("User has closed connection. Exiting...\n");
-            exit(1);
+            pthread_exit(&(tinfo->thread_id));
         }
 
         if (err == -1){

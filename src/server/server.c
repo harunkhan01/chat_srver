@@ -13,12 +13,30 @@
 #define SERVER_PORT 8443
 #define SERVER_IP "127.0.0.2"
 #define QUEUE_CAP 5 
-#define MAX_CLIENTS 10
+#define MAX_THREADS 500
 
 #define MESSAGE_SIZE 256
 
-struct thread_info t_info_buf[MAX_CLIENTS];
-pthread_t thread_buf[MAX_CLIENTS];
+struct thread_info t_info_buf[MAX_THREADS];
+pthread_t thread_buf[MAX_THREADS];
+
+int init_thread_pool(){
+    pthread_t client_thread;
+
+    for (int i=0; i < MAX_THREADS; ++i){
+        thread_buf[i] = client_thread;
+        t_info_buf[i].thread_id = thread_buf[i];
+        t_info_buf[i].thread_num = i;
+        t_info_buf[i].client_fd = client_id;
+
+        err = pthread_create(&thread_buf[i], NULL, &init_thread, &t_info_buf[i]); 
+        if (err != 0){
+            printf("Failure to initialize thread.\n");
+        }
+    }
+    
+    return 0;
+}
 
 int init_server(){
 
@@ -53,6 +71,8 @@ int init_server(){
         exit(1); 
     }
 
+    init_thread_pool();
+
     err = listen(fd, QUEUE_CAP); // permit 10 requests before refusing further requests
     if (err == -1){
         printf("Error. Value: %d\n", errno);
@@ -61,7 +81,6 @@ int init_server(){
 
     printf("Server is up and running.\n");
 
-    // begin loop to track incoming requests
     int client_id;
     int curr_thread = 0;
     struct in_addr client_ip;
@@ -76,22 +95,14 @@ int init_server(){
         }
         printf("Client successfully connected!\n");
 
-        if (curr_thread == MAX_CLIENTS){
-            printf("At max capacity. Dropping connection...\n");
-            exit(1);
+        if (curr_thread == MAX_THREADS){
+            printf("At max capacity. Connection rejected...\n");
+            continue;
         }
+
+        /* Signal to thread to respond to client */
 
         /* Spawn a thread to negotiate with client */
-        pthread_t client_thread;
-        thread_buf[curr_thread] = client_thread;
-        t_info_buf[curr_thread].thread_id = thread_buf[curr_thread];
-        t_info_buf[curr_thread].thread_num = curr_thread;
-        t_info_buf[curr_thread].client_fd = client_id;
-
-        err = pthread_create(&thread_buf[curr_thread], NULL, &init_thread, &t_info_buf[curr_thread]); 
-        if (err != 0){
-            printf("Failure to spawn thread. Client dropped...\n");
-        }
         ++curr_thread;
 
     }
