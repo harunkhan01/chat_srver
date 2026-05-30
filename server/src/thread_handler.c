@@ -10,27 +10,50 @@
 
 #include "thread_handler.h"
 
+void wait(){
+    /* We wait until we receive a signal from the main process */
+    if (pthread_cond_wait(&cond, &mutex) != 0){
+        printf("Error while requiring thread to wait\n");
+        exit(1);
+    }
+}
+
+void acquire_lock(){
+    if (pthread_mutex_lock(&mutex) != 0){
+        printf("Error while locking mutex\n");
+        exit(1);
+    }
+}
+
+void release_lock(){
+    if (pthread_mutex_unlock(&mutex) != 0){
+        printf("Error releasing lock\n");
+        exit(1);
+    }
+}
+
+void pull_from_queue(){
+    ;
+}
+
+void handle_connection(){
+    ;
+}
+
 void* init_thread(void* arg){ 
     int err;
     struct thread_info* tinfo = arg;
 
-    /* We wait until we receive a signal from the main process */
-    
+    while (1){
+        wait();
 
-    while(1){
-        err = recv(tinfo->client_fd, tinfo->msg_buf, MESSAGE_SIZE, 0);
+        acquire_lock();
 
-        if (err == 0){
-            printf("User has closed connection. Exiting...\n");
-            pthread_exit(&(tinfo->thread_id));
-        }
+        pull_from_queue();
 
-        if (err == -1){
-            printf("Error receiving. Exiting...");
-            exit(1);
-        }
-
-        printf("Client message: %s\n", tinfo->msg_buf);
+        release_lock();
+        
+        handle_connection();
     }
 
 }

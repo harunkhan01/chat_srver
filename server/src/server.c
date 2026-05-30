@@ -8,11 +8,17 @@
 
 #include <pthread.h>
 
+#include "queue.h"
 #include "server.h"
 #include "thread_handler.h"
 
+struct Queue* work_q;
 struct thread_info t_info_buf[MAX_THREADS];
 pthread_t thread_buf[MAX_THREADS];
+
+/* Global variables for threads to see */
+pthread_cond_t cond; 
+pthread_mutex_t mutex; 
 
 int init_thread_pool(){
     pthread_t client_thread;
@@ -23,9 +29,10 @@ int init_thread_pool(){
         t_info_buf[i].thread_num = i;
         t_info_buf[i].client_fd = client_id;
 
-        err = pthread_create(&thread_buf[i], NULL, &init_thread, &t_info_buf[i]); 
+        err = pthread_create(&thread_buf[i], NULL, init_thread, &t_info_buf[i]); 
         if (err != 0){
             printf("Failure to initialize thread.\n");
+            return err;
         }
     }
     
@@ -65,6 +72,7 @@ int init_server(){
         exit(1); 
     }
 
+    work_q = init_queue();
     init_thread_pool();
 
     err = listen(fd, QUEUE_CAP); // permit 10 requests before refusing further requests
